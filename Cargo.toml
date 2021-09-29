@@ -1,0 +1,19 @@
+[package]
+edition = "2018"
+name = "frogrs"
+version = "0.1.0"
+
+[dependencies]
+bevy = {git = "https://github.com/bevyengine/bevy", branch = "main"}
+bevy_ggrs = {git = "https://github.com/gschup/bevy_ggrs.git", branch = "main"}
+ggrs = {git = "https://github.com/gschup/ggrs.git", branch = "main"}
+rand = "0.8.3"
+structopt = "0.3"
+
+[[bin]]
+name = "frogrs_game"
+path = "src/main_game.rs"
+
+[[bin]]
+name = "frogrs_synctest"
+path = "src/main_synctest.rs"

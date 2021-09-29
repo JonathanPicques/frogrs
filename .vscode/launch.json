@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "cwd": "${workspaceRoot}",
+      "args": [
+        "--port",
+        "6001",
+        "--players",
+        "local",
+        "--players",
+        "127.0.0.1:6002"
+      ],
+      "name": "(Windows) Launch frogrs",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "console": "externalTerminal",
+      "program": "${workspaceRoot}/target/debug/frogrs.exe",
+      "stopAtEntry": false,
+      "environment": [{ "name": "RUST_BACKTRACE", "value": "0" }],
+      "preLaunchTask": "Rust: cargo build - frogrs"
+    },
+    {
+      "cwd": "${workspaceRoot}",
+      "args": ["--players", "2", "--check-distance", "2"],
+      "name": "(Windows) Launch frogrs_synctest",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "console": "externalTerminal",
+      "program": "${workspaceRoot}/target/debug/frogrs_synctest.exe",
+      "stopAtEntry": false,
+      "environment": [{ "name": "RUST_BACKTRACE", "value": "0" }],
+      "preLaunchTask": "Rust: cargo build - frogrs"
+    }
+  ]
+}
