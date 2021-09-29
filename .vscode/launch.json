@@ -11,11 +11,11 @@
         "--players",
         "127.0.0.1:6002"
       ],
-      "name": "(Windows) Launch frogrs",
+      "name": "(Windows) Launch frogrs_game",
       "type": "cppvsdbg",
       "request": "launch",
       "console": "externalTerminal",
-      "program": "${workspaceRoot}/target/debug/frogrs.exe",
+      "program": "${workspaceRoot}/target/debug/frogrs_game.exe",
       "stopAtEntry": false,
       "environment": [{ "name": "RUST_BACKTRACE", "value": "0" }],
       "preLaunchTask": "Rust: cargo build - frogrs"
