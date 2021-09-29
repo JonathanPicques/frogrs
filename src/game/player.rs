@@ -41,11 +41,12 @@ pub fn setup_player_system(
         .or_else(|| synctest_session.map(|s| s.num_players()))
         .or_else(|| spectator_session.map(|s| s.num_players()))
         .expect("No GGRS session found");
-    let texture_handle = asset_server.load("C:/Projects/frogrs/assets/frog.png");
+    let texture_handle = asset_server.load("frog/Stand.png");
 
     for handle in 0..num_players {
         let mut transform = Transform::default();
-        transform.translation.x = handle as f32 * 100.0;
+        transform.translation.x = 0.0;
+        transform.translation.y = handle as f32 * 100.0;
 
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 

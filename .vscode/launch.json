@@ -14,10 +14,13 @@
       "name": "(Windows) Launch frogrs_game",
       "type": "cppvsdbg",
       "request": "launch",
-      "console": "externalTerminal",
+      "console": "internalConsole",
       "program": "${workspaceRoot}/target/debug/frogrs_game.exe",
       "stopAtEntry": false,
-      "environment": [{ "name": "RUST_BACKTRACE", "value": "0" }],
+      "environment": [
+        { "name": "RUST_BACKTRACE", "value": "0" },
+        { "name": "CARGO_MANIFEST_DIR", "value": "${workspaceFolder}" }
+      ],
       "preLaunchTask": "Rust: cargo build - frogrs"
     },
     {
@@ -26,10 +29,13 @@
       "name": "(Windows) Launch frogrs_synctest",
       "type": "cppvsdbg",
       "request": "launch",
-      "console": "externalTerminal",
+      "console": "internalConsole",
       "program": "${workspaceRoot}/target/debug/frogrs_synctest.exe",
       "stopAtEntry": false,
-      "environment": [{ "name": "RUST_BACKTRACE", "value": "0" }],
+      "environment": [
+        { "name": "RUST_BACKTRACE", "value": "0" },
+        { "name": "CARGO_MANIFEST_DIR", "value": "${workspaceFolder}" }
+      ],
       "preLaunchTask": "Rust: cargo build - frogrs"
     }
   ]
