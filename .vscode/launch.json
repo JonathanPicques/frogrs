@@ -21,7 +21,7 @@
         { "name": "RUST_BACKTRACE", "value": "0" },
         { "name": "CARGO_MANIFEST_DIR", "value": "${workspaceFolder}" }
       ],
-      "preLaunchTask": "Rust: cargo build - frogrs"
+      "preLaunchTask": "rust: cargo build"
     },
     {
       "cwd": "${workspaceRoot}",
@@ -36,7 +36,7 @@
         { "name": "RUST_BACKTRACE", "value": "0" },
         { "name": "CARGO_MANIFEST_DIR", "value": "${workspaceFolder}" }
       ],
-      "preLaunchTask": "Rust: cargo build - frogrs"
+      "preLaunchTask": "rust: cargo build"
     }
   ]
 }
