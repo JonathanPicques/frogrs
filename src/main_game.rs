@@ -4,7 +4,6 @@ use bevy::ecs::system::ResMut;
 use bevy_ggrs::GGRSApp;
 use ggrs::P2PSession;
 use ggrs::PlayerType;
-use std::convert::TryInto;
 use std::error::Error;
 use std::net::SocketAddr;
 use structopt::StructOpt;
@@ -24,7 +23,7 @@ struct CommandLineArgs {
 fn main() -> Result<(), Box<dyn Error>> {
     let cmd = CommandLineArgs::from_args();
 
-    let mut p2p_session = P2PSession::new(cmd.players.len().try_into()?, INPUT_SIZE, cmd.port)?;
+    let mut p2p_session = P2PSession::new(cmd.players.len() as u32, INPUT_SIZE, cmd.port)?;
     p2p_session.set_fps(60)?;
     p2p_session.set_sparse_saving(true)?;
 

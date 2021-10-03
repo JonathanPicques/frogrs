@@ -1,12 +1,21 @@
 use bevy::prelude::*;
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession, P2PSpectatorSession, PlayerHandle, SyncTestSession};
-use std::convert::TryInto;
 
-use super::input::*;
+use super::anim::{speed_as_secs, SpriteSheetAnimation};
+use super::input::{INPUT_LEFT, INPUT_RIGHT};
 
+#[derive(Default)]
 pub struct Player {
     handle: PlayerHandle,
+}
+
+#[derive(Default, Bundle)]
+pub struct PlayerBundle {
+    player: Player,
+    #[bundle]
+    sprite_sheet: SpriteSheetBundle,
+    sprite_sheet_animation: SpriteSheetAnimation,
 }
 
 pub fn player_system(
@@ -14,7 +23,7 @@ pub fn player_system(
     inputs: Res<Vec<GameInput>>,
 ) {
     for (player, mut transform) in query.iter_mut() {
-        let input = inputs[player.handle as usize].buffer[0];
+        let input = inputs[player.handle].buffer[0];
 
         if input & INPUT_LEFT != 0 {
             transform.translation.x -= 10.0;
@@ -29,7 +38,7 @@ pub fn setup_player_system(
     asset_server: Res<AssetServer>,
     //
     mut commands: Commands,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut textures: ResMut<Assets<TextureAtlas>>,
     mut rollback_id_provider: ResMut<RollbackIdProvider>,
     //
     p2p_session: Option<Res<P2PSession>>,
@@ -40,7 +49,7 @@ pub fn setup_player_system(
         .map(|s| s.num_players())
         .or_else(|| synctest_session.map(|s| s.num_players()))
         .or_else(|| spectator_session.map(|s| s.num_players()))
-        .expect("No GGRS session found");
+        .expect("No ggrs session found");
     let texture_handle = asset_server.load("frog/Stand.png");
 
     for handle in 0..num_players {
@@ -51,13 +60,28 @@ pub fn setup_player_system(
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
         commands
-            .spawn_bundle(SpriteBundle {
-                material: materials.add(texture_handle.clone().into()),
-                transform,
+            .spawn_bundle(PlayerBundle {
+                player: Player {
+                    handle: handle as usize,
+                },
+                sprite_sheet: SpriteSheetBundle {
+                    transform,
+                    texture_atlas: textures.add(TextureAtlas::from_grid(
+                        texture_handle.clone(),
+                        Vec2::new(38.0, 32.0),
+                        20,
+                        1,
+                    )),
+                    //
+                    ..Default::default()
+                },
+                sprite_sheet_animation: SpriteSheetAnimation {
+                    speed: speed_as_secs(0.06),
+                    //
+                    ..Default::default()
+                },
+                //
                 ..Default::default()
-            })
-            .insert(Player {
-                handle: handle.try_into().unwrap(),
             })
             .insert(Rollback::new(rollback_id_provider.next_id()));
     }

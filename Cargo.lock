@@ -373,7 +373,7 @@ dependencies = [
 [[package]]
 name = "bevy_ggrs"
 version = "0.1.0"
-source = "git+https://github.com/gschup/bevy_ggrs.git?branch=main#e72c5412c5d1541536f760c54c232fd81c4d76dc"
+source = "git+https://github.com/gschup/bevy_ggrs.git?branch=main#5a14883798932d01bee9953745986adf697c80e5"
 dependencies = [
  "bevy",
  "ggrs",
@@ -1697,7 +1697,7 @@ dependencies = [
 [[package]]
 name = "ggrs"
 version = "0.5.0"
-source = "git+https://github.com/gschup/ggrs.git?branch=main#67d40348b320864b9eef2a9c71a8b72fb9b51910"
+source = "git+https://github.com/gschup/ggrs.git?branch=main#48d693327ca287b0434dd5b7fcc908db0fdc5aad"
 dependencies = [
  "bincode",
  "bitfield-rle",

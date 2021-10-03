@@ -1,15 +1,19 @@
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, GGRSPlugin};
 
+pub mod anim;
 pub mod frame;
 pub mod input;
 pub mod player;
 
+use anim::animate_sprite_system;
 use frame::frame_system;
 use frame::FrameCount;
 use input::input_system;
 use player::player_system;
 use player::setup_player_system;
+
+pub const GAME_FPS: u32 = 60;
 
 pub trait GameApp {
     fn insert_game(&mut self, window_title: &str) -> &mut Self;
@@ -32,11 +36,12 @@ impl GameApp for App {
             .add_plugin(GGRSPlugin)
             .add_plugins(DefaultPlugins)
             //
-            .with_fps(60)
+            .with_fps(GAME_FPS)
             .with_input_system(input_system)
             .add_startup_system(setup_player_system)
             .add_rollback_system(frame_system)
-            .add_rollback_system(player_system);
+            .add_rollback_system(player_system)
+            .add_rollback_system(animate_sprite_system);
 
         self
     }
