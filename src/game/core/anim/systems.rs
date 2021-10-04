@@ -1,20 +1,9 @@
-use bevy::ecs::query::With;
-use bevy::ecs::system::Query;
-use bevy::prelude::*;
+use super::structs::SpriteSheetAnimation;
+use bevy::{
+    prelude::{Assets, Handle, Query, ResMut, With},
+    sprite::{TextureAtlas, TextureAtlasSprite},
+};
 use bevy_ggrs::Rollback;
-
-use super::GAME_FPS;
-
-#[derive(Hash, Default, Reflect)]
-#[reflect(Hash)]
-pub struct SpriteSheetAnimation {
-    pub dt: u8,
-    pub speed: u8,
-}
-
-pub fn speed_as_secs(secs: f32) -> u8 {
-    return (secs * GAME_FPS as f32) as u8;
-}
 
 pub fn animate_sprite_system(
     mut query: Query<

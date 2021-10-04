@@ -2,8 +2,13 @@ use bevy::prelude::*;
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession, P2PSpectatorSession, PlayerHandle, SyncTestSession};
 
-use super::anim::{speed_as_secs, SpriteSheetAnimation};
-use super::input::{INPUT_LEFT, INPUT_RIGHT};
+use super::{
+    core::{
+        anim::{structs::SpriteSheetAnimation, utilities::speed_as_secs},
+        input::structs::{INPUT_LEFT, INPUT_RIGHT},
+    },
+    GAME_FPS,
+};
 
 #[derive(Default)]
 pub struct Player {
@@ -76,7 +81,7 @@ pub fn setup_player_system(
                     ..Default::default()
                 },
                 sprite_sheet_animation: SpriteSheetAnimation {
-                    speed: speed_as_secs(0.06),
+                    speed: speed_as_secs(GAME_FPS, 0.06),
                     //
                     ..Default::default()
                 },

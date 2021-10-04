@@ -1,3 +1,5 @@
+mod game;
+
 use bevy::app::App;
 use bevy::ecs::system::Res;
 use bevy::ecs::system::ResMut;
@@ -8,8 +10,7 @@ use std::error::Error;
 use std::net::SocketAddr;
 use structopt::StructOpt;
 
-mod game;
-use game::input::INPUT_SIZE;
+use game::core::input::structs::INPUT_SIZE;
 use game::GameApp;
 
 #[derive(StructOpt)]

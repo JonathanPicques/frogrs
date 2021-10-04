@@ -1,17 +1,15 @@
+pub mod core;
+pub mod player;
+
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, GGRSPlugin};
 
-pub mod anim;
-pub mod frame;
-pub mod input;
-pub mod player;
-
-use anim::animate_sprite_system;
-use frame::frame_system;
-use frame::FrameCount;
-use input::input_system;
-use player::player_system;
-use player::setup_player_system;
+use self::core::anim::systems::animate_sprite_system;
+use self::core::frame::structs::FrameCount;
+use self::core::frame::systems::frame_system;
+use self::core::input::systems::input_system;
+use self::player::player_system;
+use self::player::setup_player_system;
 
 pub const GAME_FPS: u32 = 60;
 

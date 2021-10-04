@@ -7,7 +7,7 @@ use std::error::Error;
 use structopt::StructOpt;
 
 mod game;
-use game::input::INPUT_SIZE;
+use game::core::input::structs::INPUT_SIZE;
 use game::GameApp;
 
 #[derive(StructOpt)]
