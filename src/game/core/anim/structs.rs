@@ -1,6 +1,7 @@
-use bevy::prelude::*;
+use bevy::ecs::component::Component;
+use bevy::reflect::Reflect;
 
-#[derive(Hash, Default, Reflect)]
+#[derive(Hash, Default, Reflect, Component)]
 #[reflect(Hash)]
 pub struct SpriteSheetAnimation {
     pub dt: u8,
