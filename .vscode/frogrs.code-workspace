@@ -1,7 +1,11 @@
 {
   "folders": [{ "path": ".." }],
   "settings": {
+    "debug.allowBreakpointsEverywhere": true,
     "editor.formatOnSave": true,
-    "debug.allowBreakpointsEverywhere": true
+    // rust-analyzer
+    "rust-analyzer.assist.importGranularity": "module",
+    "rust-analyzer.assist.importPrefix": "crate",
+    "rust-analyzer.inlayHints.enable": false
   }
 }

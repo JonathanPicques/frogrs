@@ -1,9 +1,7 @@
-use super::structs::SpriteSheetAnimation;
-use bevy::{
-    prelude::{Assets, Handle, Query, ResMut, With},
-    sprite::{TextureAtlas, TextureAtlasSprite},
-};
+use bevy::prelude::*;
 use bevy_ggrs::Rollback;
+
+use crate::game::core::anim::structs::SpriteSheetAnimation;
 
 pub fn animate_sprite_system(
     mut query: Query<

@@ -10,8 +10,8 @@ use std::error::Error;
 use std::net::SocketAddr;
 use structopt::StructOpt;
 
-use game::core::input::structs::INPUT_SIZE;
-use game::GameApp;
+use crate::game::core::input::structs::INPUT_SIZE;
+use crate::game::GameApp;
 
 #[derive(StructOpt)]
 struct CommandLineArgs {

@@ -4,22 +4,27 @@ pub mod player;
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, GGRSPlugin};
 
-use self::core::anim::systems::animate_sprite_system;
-use self::core::frame::structs::FrameCount;
-use self::core::frame::systems::frame_system;
-use self::core::input::systems::input_system;
-use self::core::maths::structs::Transform2D;
-use self::core::maths::systems::sync_transform_system;
-use self::core::physics::structs::PhysicsBody2D;
-use self::core::physics::systems::physics_system;
-use self::player::player_system;
-use self::player::setup_player_system;
+use crate::game::core::anim::systems::animate_sprite_system;
+use crate::game::core::frame::structs::FrameCount;
+use crate::game::core::frame::systems::frame_system;
+use crate::game::core::input::systems::input_system;
+use crate::game::core::maths::structs::Transform2D;
+use crate::game::core::maths::systems::sync_transform_system;
+use crate::game::core::physics::structs::{PhysicsBody2D, PhysicsState};
+use crate::game::core::physics::systems::{
+    physics_cleanup_system, physics_system, setup_physics_system,
+};
+use crate::game::player::{player_system, setup_player_system};
 
 pub const GAME_FPS: u32 = 60;
 
-const GAME_STAGE: &str = "game_stage";
-const PHYSICS_STAGE: &str = "physics_stage";
-const TRANSFORM_STAGE: &str = "transform_stage";
+#[derive(Eq, Hash, Clone, Debug, PartialEq, StageLabel)]
+enum RollbackStages {
+    Game,
+    Physics,
+    PhysicsCleanup,
+    TransformSynchronization,
+}
 
 pub trait GameApp {
     fn insert_game(&mut self, window_title: &str) -> &mut Self;
@@ -37,36 +42,44 @@ impl GameApp for App {
                 height: 720.0,
                 ..Default::default()
             })
-            .insert_resource(FrameCount::default())
             //
             .add_plugin(GGRSPlugin)
             .add_plugins(DefaultPlugins)
+            //
+            .insert_rollback_resource(FrameCount::default())
+            .insert_rollback_resource(PhysicsState::default())
+            //
+            .register_rollback_type::<Transform2D>()
+            .register_rollback_type::<PhysicsBody2D>()
             //
             .with_input_system(input_system)
             .with_update_frequency(GAME_FPS)
             //
             .add_startup_system(setup_player_system)
-            //
-            .register_rollback_type::<Transform2D>()
-            .register_rollback_type::<PhysicsBody2D>()
+            .add_startup_system(setup_physics_system)
             //
             .with_rollback_schedule(
                 Schedule::default()
                     .with_stage(
-                        GAME_STAGE,
-                        SystemStage::parallel()
+                        RollbackStages::Game,
+                        SystemStage::single_threaded()
                             .with_system(frame_system)
                             .with_system(player_system)
                             .with_system(animate_sprite_system),
                     )
                     .with_stage_after(
-                        GAME_STAGE,
-                        PHYSICS_STAGE,
+                        RollbackStages::Game,
+                        RollbackStages::Physics,
                         SystemStage::parallel().with_system(physics_system),
                     )
                     .with_stage_after(
-                        PHYSICS_STAGE,
-                        TRANSFORM_STAGE,
+                        RollbackStages::Physics,
+                        RollbackStages::PhysicsCleanup,
+                        SystemStage::parallel().with_system(physics_cleanup_system),
+                    )
+                    .with_stage_after(
+                        RollbackStages::PhysicsCleanup,
+                        RollbackStages::TransformSynchronization,
                         SystemStage::parallel().with_system(sync_transform_system),
                     ),
             );

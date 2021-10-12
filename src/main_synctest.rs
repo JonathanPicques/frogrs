@@ -1,3 +1,5 @@
+mod game;
+
 use bevy::app::App;
 use bevy::ecs::system::Res;
 use bevy::ecs::system::ResMut;
@@ -6,9 +8,8 @@ use ggrs::SyncTestSession;
 use std::error::Error;
 use structopt::StructOpt;
 
-mod game;
-use game::core::input::structs::INPUT_SIZE;
-use game::GameApp;
+use crate::game::core::input::structs::INPUT_SIZE;
+use crate::game::GameApp;
 
 #[derive(StructOpt)]
 struct CommandLineArgs {

@@ -1,5 +1,4 @@
-use bevy::ecs::component::Component;
-use bevy::reflect::Reflect;
+use bevy::prelude::*;
 
 #[derive(Hash, Default, Reflect, Component)]
 #[reflect(Hash)]

@@ -1,13 +1,14 @@
 use bevy::prelude::*;
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession, P2PSpectatorSession, PlayerHandle, SyncTestSession};
+use rapier2d::prelude::*;
 
-use super::{
+use crate::game::{
     core::{
         anim::{structs::SpriteSheetAnimation, utilities::speed_as_secs},
         input::structs::{INPUT_LEFT, INPUT_RIGHT},
         maths::structs::Transform2D,
-        physics::structs::PhysicsBody2D,
+        physics::structs::{PhysicsBody2D, PhysicsState},
     },
     GAME_FPS,
 };
@@ -28,18 +29,18 @@ pub struct PlayerBundle {
 }
 
 pub fn player_system(
-    mut query: Query<(&Player, &mut PhysicsBody2D), With<Rollback>>,
+    mut physics_state: ResMut<PhysicsState>,
+    mut query: Query<(&Player, &PhysicsBody2D), With<Rollback>>,
     inputs: Res<Vec<GameInput>>,
 ) {
-    for (player, mut physics_body) in query.iter_mut() {
+    for (player, physics_body) in query.iter_mut() {
         let input = inputs[player.handle].buffer[0];
+        let rigid_body = physics_state.get_rigid_body(&physics_body);
 
         if input & INPUT_LEFT != 0 {
-            physics_body.velocity.set_x(-10.0);
+            rigid_body.apply_force(vector!(-30.0, 0.0), true);
         } else if input & INPUT_RIGHT != 0 {
-            physics_body.velocity.set_x(10.0);
-        } else {
-            physics_body.velocity.set_x(0.0);
+            rigid_body.apply_force(vector!(30.0, 0.0), true);
         }
     }
 }
@@ -49,6 +50,7 @@ pub fn setup_player_system(
     //
     mut commands: Commands,
     mut textures: ResMut<Assets<TextureAtlas>>,
+    mut physics_state: ResMut<PhysicsState>,
     mut rollback_id_provider: ResMut<RollbackIdProvider>,
     //
     p2p_session: Option<Res<P2PSession>>,
@@ -62,10 +64,15 @@ pub fn setup_player_system(
         .expect("No ggrs session found");
     let texture_handle = asset_server.load("frog/Stand.png");
 
+    let ground_collider = ColliderBuilder::cuboid(100.0, 1.0)
+        .translation(vector!(0.0, -12.0))
+        .build();
+    physics_state.collider_set.insert(ground_collider);
+
     for handle in 0..num_players {
         let mut transform = Transform2D::default();
-        transform.position.x = 0.0;
-        transform.position.y = handle as f32 * 100.0;
+        transform.position.x = handle as f32 * 5.0;
+        transform.position.y = 10.0;
 
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
@@ -74,7 +81,12 @@ pub fn setup_player_system(
                 player: Player {
                     handle: handle as usize,
                 },
+                physics_body: PhysicsBody2D {
+                    handle: setup_player_body(&transform, &mut physics_state).into_raw_parts(),
+                    ..Default::default()
+                },
                 transform,
+                //
                 sprite_sheet: SpriteSheetBundle {
                     texture_atlas: textures.add(TextureAtlas::from_grid(
                         texture_handle.clone(),
@@ -95,4 +107,20 @@ pub fn setup_player_system(
             })
             .insert(Rollback::new(rollback_id_provider.next_id()));
     }
+}
+
+fn setup_player_body(transform: &Transform2D, physics_state: &mut PhysicsState) -> RigidBodyHandle {
+    let rigid_body = RigidBodyBuilder::new_dynamic()
+        .translation(vector![transform.position.x, transform.position.y])
+        .build();
+    let rigid_body_handle = physics_state.rigid_body_set.insert(rigid_body);
+    let rigid_body_collider = ColliderBuilder::cuboid(0.5, 1.4).restitution(0.7).build();
+
+    physics_state.collider_set.insert_with_parent(
+        rigid_body_collider,
+        rigid_body_handle,
+        &mut physics_state.rigid_body_set,
+    );
+
+    rigid_body_handle
 }

@@ -1,5 +1,4 @@
-use bevy::ecs::component::Component;
-use bevy::reflect::Reflect;
+use bevy::prelude::*;
 
 #[derive(Default, Reflect)]
 pub struct Vector2D {
@@ -10,9 +9,9 @@ pub struct Vector2D {
 #[allow(dead_code)]
 impl Vector2D {
     #[inline]
-    pub fn set(&mut self, value: f32) -> &mut Self {
-        self.x = value;
-        self.y = value;
+    pub fn set(&mut self, x: f32, y: f32) -> &mut Self {
+        self.x = x;
+        self.y = y;
         self
     }
     #[inline]
@@ -25,11 +24,16 @@ impl Vector2D {
         self.y = value;
         self
     }
+    pub fn set_all(&mut self, value: f32) -> &mut Self {
+        self.x = value;
+        self.y = value;
+        self
+    }
 
     #[inline]
-    pub fn add(&mut self, value: f32) -> &mut Self {
-        self.x += value;
-        self.y += value;
+    pub fn add(&mut self, x: f32, y: f32) -> &mut Self {
+        self.x += x;
+        self.y += y;
         self
     }
     #[inline]
@@ -42,11 +46,16 @@ impl Vector2D {
         self.y += value;
         self
     }
+    pub fn add_all(&mut self, value: f32) -> &mut Self {
+        self.x += value;
+        self.y += value;
+        self
+    }
 }
 
 #[derive(Default, Reflect, Component)]
 pub struct Transform2D {
     pub scale: Vector2D,
     pub position: Vector2D,
-    pub rotation: i16,
+    pub rotation: f32,
 }
