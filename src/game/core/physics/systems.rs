@@ -2,18 +2,18 @@ use bevy::prelude::*;
 use rapier2d::prelude::*;
 
 use crate::game::core::maths::structs::Transform2D;
-use crate::game::core::physics::structs::{PhysicsBody2D, PhysicsState};
+use crate::game::core::physics::structs::{PhysicsState, RigidBodyHandle2D};
 
 const SCALE: f32 = 20.0;
 
 pub fn physics_system(
     mut physics_state: ResMut<PhysicsState>,
-    mut query: Query<(&mut Transform2D, &PhysicsBody2D)>,
+    mut query: Query<(&mut Transform2D, &RigidBodyHandle2D)>,
 ) {
     step_physics(&mut physics_state);
 
-    for (mut transform, physics_body) in query.iter_mut() {
-        let rigid_body = &physics_state.get_rigid_body(physics_body);
+    for (mut transform, rigid_body_handle) in query.iter_mut() {
+        let rigid_body = &physics_state.get_rigid_body(rigid_body_handle);
         let rigid_body_rotation = rigid_body.rotation();
         let rigid_body_translation = rigid_body.translation();
 
@@ -50,7 +50,3 @@ fn step_physics(physics_state: &mut PhysicsState) {
         &physics_state.collider_set,
     );
 }
-
-pub fn setup_physics_system() {}
-
-pub fn physics_cleanup_system() {}

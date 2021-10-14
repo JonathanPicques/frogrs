@@ -10,10 +10,8 @@ use crate::game::core::frame::systems::frame_system;
 use crate::game::core::input::systems::input_system;
 use crate::game::core::maths::structs::Transform2D;
 use crate::game::core::maths::systems::sync_transform_system;
-use crate::game::core::physics::structs::{PhysicsBody2D, PhysicsState};
-use crate::game::core::physics::systems::{
-    physics_cleanup_system, physics_system, setup_physics_system,
-};
+use crate::game::core::physics::structs::{PhysicsState, RigidBodyHandle2D};
+use crate::game::core::physics::systems::physics_system;
 use crate::game::player::{player_system, setup_player_system};
 
 pub const GAME_FPS: u32 = 60;
@@ -22,7 +20,6 @@ pub const GAME_FPS: u32 = 60;
 enum RollbackStages {
     Game,
     Physics,
-    PhysicsCleanup,
     TransformSynchronization,
 }
 
@@ -50,13 +47,12 @@ impl GameApp for App {
             .insert_rollback_resource(PhysicsState::default())
             //
             .register_rollback_type::<Transform2D>()
-            .register_rollback_type::<PhysicsBody2D>()
+            .register_rollback_type::<RigidBodyHandle2D>()
             //
             .with_input_system(input_system)
             .with_update_frequency(GAME_FPS)
             //
             .add_startup_system(setup_player_system)
-            .add_startup_system(setup_physics_system)
             //
             .with_rollback_schedule(
                 Schedule::default()
@@ -70,15 +66,10 @@ impl GameApp for App {
                     .with_stage_after(
                         RollbackStages::Game,
                         RollbackStages::Physics,
-                        SystemStage::parallel().with_system(physics_system),
+                        SystemStage::single_threaded().with_system(physics_system),
                     )
                     .with_stage_after(
                         RollbackStages::Physics,
-                        RollbackStages::PhysicsCleanup,
-                        SystemStage::parallel().with_system(physics_cleanup_system),
-                    )
-                    .with_stage_after(
-                        RollbackStages::PhysicsCleanup,
                         RollbackStages::TransformSynchronization,
                         SystemStage::parallel().with_system(sync_transform_system),
                     ),

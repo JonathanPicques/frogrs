@@ -8,7 +8,7 @@ use crate::game::{
         anim::{structs::SpriteSheetAnimation, utilities::speed_as_secs},
         input::structs::{INPUT_LEFT, INPUT_RIGHT},
         maths::structs::Transform2D,
-        physics::structs::{PhysicsBody2D, PhysicsState},
+        physics::structs::{PhysicsState, RigidBodyHandle2D},
     },
     GAME_FPS,
 };
@@ -22,7 +22,7 @@ pub struct Player {
 pub struct PlayerBundle {
     player: Player,
     transform: Transform2D,
-    physics_body: PhysicsBody2D,
+    rigid_body_handle: RigidBodyHandle2D,
     #[bundle]
     sprite_sheet: SpriteSheetBundle,
     sprite_sheet_animation: SpriteSheetAnimation,
@@ -30,12 +30,12 @@ pub struct PlayerBundle {
 
 pub fn player_system(
     mut physics_state: ResMut<PhysicsState>,
-    mut query: Query<(&Player, &PhysicsBody2D), With<Rollback>>,
+    mut players_with_rigid_body_query: Query<(&Player, &RigidBodyHandle2D), With<Rollback>>,
     inputs: Res<Vec<GameInput>>,
 ) {
-    for (player, physics_body) in query.iter_mut() {
+    for (player, rigid_body_handle) in players_with_rigid_body_query.iter_mut() {
         let input = inputs[player.handle].buffer[0];
-        let rigid_body = physics_state.get_rigid_body(&physics_body);
+        let rigid_body = physics_state.get_rigid_body(&rigid_body_handle);
 
         if input & INPUT_LEFT != 0 {
             rigid_body.apply_force(vector!(-30.0, 0.0), true);
@@ -74,6 +74,8 @@ pub fn setup_player_system(
         transform.position.x = handle as f32 * 5.0;
         transform.position.y = 10.0;
 
+        let rigid_body_handle = setup_player_body(&transform, &mut physics_state);
+
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
         commands
@@ -81,11 +83,8 @@ pub fn setup_player_system(
                 player: Player {
                     handle: handle as usize,
                 },
-                physics_body: PhysicsBody2D {
-                    handle: setup_player_body(&transform, &mut physics_state).into_raw_parts(),
-                    ..Default::default()
-                },
                 transform,
+                rigid_body_handle,
                 //
                 sprite_sheet: SpriteSheetBundle {
                     texture_atlas: textures.add(TextureAtlas::from_grid(
@@ -109,7 +108,10 @@ pub fn setup_player_system(
     }
 }
 
-fn setup_player_body(transform: &Transform2D, physics_state: &mut PhysicsState) -> RigidBodyHandle {
+fn setup_player_body(
+    transform: &Transform2D,
+    physics_state: &mut PhysicsState,
+) -> RigidBodyHandle2D {
     let rigid_body = RigidBodyBuilder::new_dynamic()
         .translation(vector![transform.position.x, transform.position.y])
         .build();
@@ -122,5 +124,5 @@ fn setup_player_body(transform: &Transform2D, physics_state: &mut PhysicsState) 
         &mut physics_state.rigid_body_set,
     );
 
-    rigid_body_handle
+    RigidBodyHandle2D(rigid_body_handle)
 }

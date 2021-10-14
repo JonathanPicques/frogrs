@@ -1,15 +1,9 @@
 use bevy::prelude::*;
-use bevy::reflect::serde::Serializable;
-use bevy::reflect::{FromType, GetTypeRegistration, ReflectMut, ReflectRef, TypeRegistration};
+use bevy::reflect::impl_reflect_value;
 use rapier2d::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Reflect, Component)]
-pub struct PhysicsBody2D {
-    pub handle: (u32, u32),
-}
-
-#[derive(Serialize, Deserialize, Component, Clone)]
+#[derive(Clone, Component, Serialize, Deserialize)]
 pub struct PhysicsState {
     pub joint_set: JointSet,
     pub collider_set: ColliderSet,
@@ -25,9 +19,8 @@ pub struct PhysicsState {
 }
 
 impl PhysicsState {
-    pub fn get_rigid_body(&mut self, rigid_body: &PhysicsBody2D) -> &mut RigidBody {
-        &mut self.rigid_body_set
-            [RigidBodyHandle::from_raw_parts(rigid_body.handle.0, rigid_body.handle.1)]
+    pub fn get_rigid_body(&mut self, rigid_body_handle: &RigidBodyHandle2D) -> &mut RigidBody {
+        &mut self.rigid_body_set[rigid_body_handle.0]
     }
 }
 
@@ -49,62 +42,15 @@ impl Default for PhysicsState {
     }
 }
 
-unsafe impl Reflect for PhysicsState {
-    fn type_name(&self) -> &str {
-        std::any::type_name::<Self>()
-    }
+impl_reflect_value!(PhysicsState(Serialize, Deserialize));
 
-    fn any(&self) -> &dyn std::any::Any {
-        self
-    }
+#[derive(Clone, Component, Serialize, Deserialize)]
+pub struct RigidBodyHandle2D(pub RigidBodyHandle);
 
-    fn any_mut(&mut self) -> &mut dyn std::any::Any {
-        self
-    }
-
-    fn apply(&mut self, value: &dyn Reflect) {
-        let value = value.any();
-        if let Some(value) = value.downcast_ref::<Self>() {
-            *self = value.clone();
-        } else {
-            panic!("Value is not a {}.", std::any::type_name::<Self>());
-        }
-    }
-
-    fn set(&mut self, value: Box<dyn Reflect>) -> Result<(), Box<dyn Reflect>> {
-        *self = value.take()?;
-        Ok(())
-    }
-
-    fn reflect_ref(&self) -> bevy::reflect::ReflectRef {
-        ReflectRef::Value(self)
-    }
-
-    fn reflect_mut(&mut self) -> bevy::reflect::ReflectMut {
-        ReflectMut::Value(self)
-    }
-
-    fn clone_value(&self) -> Box<dyn Reflect> {
-        Box::new(self.clone())
-    }
-
-    fn reflect_hash(&self) -> Option<u64> {
-        None
-    }
-
-    fn reflect_partial_eq(&self, _value: &dyn Reflect) -> Option<bool> {
-        None
-    }
-
-    fn serializable(&self) -> Option<bevy::reflect::serde::Serializable> {
-        Some(Serializable::Borrowed(self))
+impl Default for RigidBodyHandle2D {
+    fn default() -> Self {
+        Self(RigidBodyHandle::invalid())
     }
 }
 
-impl GetTypeRegistration for PhysicsState {
-    fn get_type_registration() -> bevy::reflect::TypeRegistration {
-        let mut registration = TypeRegistration::of::<PhysicsState>();
-        registration.insert::<ReflectDeserialize>(FromType::<PhysicsState>::from_type());
-        registration
-    }
-}
+impl_reflect_value!(RigidBodyHandle2D(Serialize, Deserialize));
