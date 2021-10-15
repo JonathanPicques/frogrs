@@ -8,7 +8,7 @@ use crate::game::{
         anim::{structs::SpriteSheetAnimation, utilities::speed_as_secs},
         input::structs::{INPUT_LEFT, INPUT_RIGHT},
         maths::structs::Transform2D,
-        physics::structs::{PhysicsState, RigidBodyHandle2D},
+        physics::structs::*,
     },
     GAME_FPS,
 };
@@ -29,13 +29,13 @@ pub struct PlayerBundle {
 }
 
 pub fn player_system(
-    mut physics_state: ResMut<PhysicsState>,
+    mut rigid_body_set: ResMut<RigidBodySetRes>,
     mut players_with_rigid_body_query: Query<(&Player, &RigidBodyHandle2D), With<Rollback>>,
     inputs: Res<Vec<GameInput>>,
 ) {
     for (player, rigid_body_handle) in players_with_rigid_body_query.iter_mut() {
         let input = inputs[player.handle].buffer[0];
-        let rigid_body = physics_state.get_rigid_body(&rigid_body_handle);
+        let rigid_body = rigid_body_set.get_mut(rigid_body_handle.0).unwrap();
 
         if input & INPUT_LEFT != 0 {
             rigid_body.apply_force(vector!(-30.0, 0.0), true);
@@ -50,7 +50,8 @@ pub fn setup_player_system(
     //
     mut commands: Commands,
     mut textures: ResMut<Assets<TextureAtlas>>,
-    mut physics_state: ResMut<PhysicsState>,
+    mut collider_set: ResMut<ColliderSetRes>,
+    mut rigid_body_set: ResMut<RigidBodySetRes>,
     mut rollback_id_provider: ResMut<RollbackIdProvider>,
     //
     p2p_session: Option<Res<P2PSession>>,
@@ -67,14 +68,15 @@ pub fn setup_player_system(
     let ground_collider = ColliderBuilder::cuboid(100.0, 1.0)
         .translation(vector!(0.0, -12.0))
         .build();
-    physics_state.collider_set.insert(ground_collider);
+    collider_set.insert(ground_collider);
 
     for handle in 0..num_players {
         let mut transform = Transform2D::default();
         transform.position.x = handle as f32 * 5.0;
         transform.position.y = 10.0;
 
-        let rigid_body_handle = setup_player_body(&transform, &mut physics_state);
+        let rigid_body_handle =
+            setup_player_body(&transform, &mut collider_set, &mut rigid_body_set);
 
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
@@ -110,19 +112,16 @@ pub fn setup_player_system(
 
 fn setup_player_body(
     transform: &Transform2D,
-    physics_state: &mut PhysicsState,
+    collider_set: &mut ColliderSetRes,
+    rigid_body_set: &mut RigidBodySetRes,
 ) -> RigidBodyHandle2D {
     let rigid_body = RigidBodyBuilder::new_dynamic()
         .translation(vector![transform.position.x, transform.position.y])
         .build();
-    let rigid_body_handle = physics_state.rigid_body_set.insert(rigid_body);
+    let rigid_body_handle = rigid_body_set.insert(rigid_body);
     let rigid_body_collider = ColliderBuilder::cuboid(0.5, 1.4).restitution(0.7).build();
 
-    physics_state.collider_set.insert_with_parent(
-        rigid_body_collider,
-        rigid_body_handle,
-        &mut physics_state.rigid_body_set,
-    );
+    collider_set.insert_with_parent(rigid_body_collider, rigid_body_handle, rigid_body_set);
 
     RigidBodyHandle2D(rigid_body_handle)
 }

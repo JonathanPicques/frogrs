@@ -10,7 +10,7 @@ use crate::game::core::frame::systems::frame_system;
 use crate::game::core::input::systems::input_system;
 use crate::game::core::maths::structs::Transform2D;
 use crate::game::core::maths::systems::sync_transform_system;
-use crate::game::core::physics::structs::{PhysicsState, RigidBodyHandle2D};
+use crate::game::core::physics::structs::*;
 use crate::game::core::physics::systems::physics_system;
 use crate::game::player::{player_system, setup_player_system};
 
@@ -44,10 +44,21 @@ impl GameApp for App {
             .add_plugins(DefaultPlugins)
             //
             .insert_rollback_resource(FrameCount::default())
-            .insert_rollback_resource(PhysicsState::default())
+            //
+            .insert_rollback_resource(GravityRes::default())
+            .insert_rollback_resource(JointSetRes::default())
+            .insert_rollback_resource(CCDSolverRes::default())
+            .insert_rollback_resource(BroadPhaseRes::default())
+            .insert_rollback_resource(ColliderSetRes::default())
+            .insert_rollback_resource(NarrowPhaseRes::default())
+            .insert_rollback_resource(RigidBodySetRes::default())
+            .insert_rollback_resource(IslandManagerRes::default())
+            .insert_rollback_resource(QueryPipelineRes::default())
+            .insert_rollback_resource(IntegrationParametersRes::default())
             //
             .register_rollback_type::<Transform2D>()
             .register_rollback_type::<RigidBodyHandle2D>()
+            //
             //
             .with_input_system(input_system)
             .with_update_frequency(GAME_FPS)
