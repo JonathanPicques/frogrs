@@ -57,7 +57,7 @@
     },
     {
       "cwd": "${workspaceRoot}",
-      "args": ["--players", "4", "--check-distance", "7"],
+      "args": ["--players", "2", "--check-distance", "7"],
       "name": "(Windows) Launch frogrs_synctest",
       "type": "cppvsdbg",
       "request": "launch",

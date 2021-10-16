@@ -6,6 +6,11 @@ use crate::game::core::physics::structs::*;
 
 const SCALE: f32 = 20.0;
 
+pub enum PhysicsGroups {
+    Solid = 1 << 0,
+    Player = 1 << 1,
+}
+
 pub fn physics_system(
     gravity: Res<GravityRes>,
     integration_parameters: Res<IntegrationParametersRes>,

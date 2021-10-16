@@ -8,7 +8,7 @@ use crate::game::{
         anim::{structs::SpriteSheetAnimation, utilities::speed_as_secs},
         input::structs::{INPUT_JUMP, INPUT_LEFT, INPUT_RIGHT},
         maths::structs::Transform2D,
-        physics::structs::*,
+        physics::{structs::*, systems::PhysicsGroups},
     },
     GAME_FPS,
 };
@@ -69,18 +69,15 @@ pub fn setup_player_system(
     let font_handle = asset_server.load("fonts/Pixellari.ttf");
     let texture_handle = asset_server.load("textures/frog/Stand.png");
 
-    let ground_collider = ColliderBuilder::cuboid(100.0, 1.0)
-        .translation(vector!(0.0, -12.0))
-        .build();
-    collider_set.insert(ground_collider);
+    setup_world(&mut collider_set);
 
     for handle in 0..num_players {
         let mut transform = Transform2D::default();
-        transform.position.x = handle as f32 * 5.0;
+        transform.position.x = handle as f32 * 10.0;
         transform.position.y = 10.0;
 
         let rigid_body_handle =
-            setup_player_body(&transform, &mut collider_set, &mut rigid_body_set);
+            setup_player_rigid_body(&transform, &mut collider_set, &mut rigid_body_set);
 
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
@@ -137,7 +134,19 @@ pub fn setup_player_system(
     }
 }
 
-fn setup_player_body(
+fn setup_world(collider_set: &mut ColliderSetRes) -> ColliderHandle {
+    collider_set.insert(
+        ColliderBuilder::cuboid(100.0, 1.0)
+            .translation(vector!(0.0, -12.0))
+            .collision_groups(InteractionGroups::new(
+                PhysicsGroups::Solid as u32,
+                PhysicsGroups::Solid as u32 | PhysicsGroups::Player as u32,
+            ))
+            .build(),
+    )
+}
+
+fn setup_player_rigid_body(
     transform: &Transform2D,
     collider_set: &mut ColliderSetRes,
     rigid_body_set: &mut RigidBodySetRes,
@@ -147,7 +156,13 @@ fn setup_player_body(
         .lock_rotations()
         .build();
     let rigid_body_handle = rigid_body_set.insert(rigid_body);
-    let rigid_body_collider = ColliderBuilder::cuboid(0.5, 1.4).restitution(0.7).build();
+    let rigid_body_collider = ColliderBuilder::cuboid(0.5, 1.4)
+        .restitution(0.7)
+        .collision_groups(InteractionGroups::new(
+            PhysicsGroups::Player as u32,
+            PhysicsGroups::Solid as u32 | PhysicsGroups::Player as u32,
+        ))
+        .build();
 
     collider_set.insert_with_parent(rigid_body_collider, rigid_body_handle, rigid_body_set);
 
