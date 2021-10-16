@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "compounds": [
     {
-      "name": "(Windows) Launch frogrs (2 instances)",
+      "name": "(Windows) Launch frogrs_game (2 instances)",
       "configurations": [
         "(Windows) Launch frogrs_game",
         "(Windows) Launch frogrs_game (other)"

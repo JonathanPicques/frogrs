@@ -42,7 +42,7 @@ pub fn physics_system(
     query_pipeline.update(&island_manager, &rigid_body_set, &collider_set);
 
     for (mut transform, rigid_body_handle) in query.iter_mut() {
-        let rigid_body = rigid_body_set.get(rigid_body_handle.0).unwrap();
+        let rigid_body = &rigid_body_set[rigid_body_handle.0];
         let rigid_body_rotation = rigid_body.rotation();
         let rigid_body_translation = rigid_body.translation();
 

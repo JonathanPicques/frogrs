@@ -6,6 +6,7 @@ version = "0.1.0"
 [dependencies]
 bevy = {git = "https://github.com/bevyengine/bevy", branch = "main"}
 bevy_ggrs = {git = "https://github.com/JonathanPicques/bevy_ggrs.git", branch = "main"}
+derive_more = "0.99.16"
 fixed = "1.10"
 ggrs = "0.5.1"
 rand = "0.8.3"
