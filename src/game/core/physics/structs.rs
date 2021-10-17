@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 use bevy::reflect::impl_reflect_value;
 use derive_more::{Deref, DerefMut};
@@ -80,7 +82,7 @@ impl_reflect_value!(IntegrationParametersRes(Serialize, Deserialize));
 
 // Physics ECS components
 
-#[derive(Clone, Deref, DerefMut, Component, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deref, DerefMut, Component, Serialize, Deserialize)]
 pub struct RigidBodyHandle2D(pub RigidBodyHandle);
 
 impl Default for RigidBodyHandle2D {
@@ -89,3 +91,10 @@ impl Default for RigidBodyHandle2D {
     }
 }
 impl_reflect_value!(RigidBodyHandle2D(Serialize, Deserialize));
+
+// Physics ECS components book-keeping
+
+#[derive(Clone, Default, Deref, DerefMut, Component, Serialize, Deserialize)]
+pub struct RigidBodyRemovedEntitiesRes(pub HashMap<Entity, RigidBodyHandle>);
+
+impl_reflect_value!(RigidBodyRemovedEntitiesRes(Serialize, Deserialize));

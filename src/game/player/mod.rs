@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use ggrs::{GameInput, P2PSession, P2PSpectatorSession, PlayerHandle, SyncTestSession};
+use log::info;
 use rapier2d::prelude::*;
 
 use crate::game::{
@@ -13,14 +14,14 @@ use crate::game::{
     GAME_FPS,
 };
 
-#[derive(Default, Component)]
-pub struct Player {
+#[derive(Default, Reflect, Component)]
+pub struct Player2D {
     handle: PlayerHandle,
 }
 
 #[derive(Default, Bundle)]
 pub struct PlayerBundle {
-    player: Player,
+    player: Player2D,
     transform: Transform2D,
     rigid_body_handle: RigidBodyHandle2D,
     #[bundle]
@@ -29,10 +30,10 @@ pub struct PlayerBundle {
 }
 
 pub fn player_system(
-    mut query: Query<(&Player, &RigidBodyHandle2D), With<Rollback>>,
-    //
     inputs: Res<Vec<GameInput>>,
     mut rigid_body_set: ResMut<RigidBodySetRes>,
+    //
+    mut query: Query<(&Player2D, &RigidBodyHandle2D), With<Rollback>>,
 ) {
     for (player, rigid_body_handle) in query.iter_mut() {
         let input = inputs[player.handle].buffer[0];
@@ -48,18 +49,18 @@ pub fn player_system(
     }
 }
 
-pub fn setup_player_system(
+pub fn startup_player_system(
     asset_server: Res<AssetServer>,
+    //
+    p2p_session: Option<Res<P2PSession>>,
+    synctest_session: Option<Res<SyncTestSession>>,
+    spectator_session: Option<Res<P2PSpectatorSession>>,
     //
     mut commands: Commands,
     mut textures: ResMut<Assets<TextureAtlas>>,
     mut collider_set: ResMut<ColliderSetRes>,
     mut rigid_body_set: ResMut<RigidBodySetRes>,
     mut rollback_id_provider: ResMut<RollbackIdProvider>,
-    //
-    p2p_session: Option<Res<P2PSession>>,
-    synctest_session: Option<Res<SyncTestSession>>,
-    spectator_session: Option<Res<P2PSpectatorSession>>,
 ) {
     let num_players = p2p_session
         .map(|s| s.num_players())
@@ -69,21 +70,25 @@ pub fn setup_player_system(
     let font_handle = asset_server.load("fonts/Pixellari.ttf");
     let texture_handle = asset_server.load("textures/frog/Stand.png");
 
-    setup_world(&mut collider_set);
+    create_world_collider(&mut collider_set);
 
     for handle in 0..num_players {
         let mut transform = Transform2D::default();
         transform.position.x = handle as f32 * 10.0;
         transform.position.y = 10.0;
 
-        let rigid_body_handle =
-            setup_player_rigid_body(&transform, &mut collider_set, &mut rigid_body_set);
+        let rigid_body_handle = create_player_rigid_body(
+            handle as usize,
+            &transform,
+            &mut collider_set,
+            &mut rigid_body_set,
+        );
 
         commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
         commands
             .spawn_bundle(PlayerBundle {
-                player: Player {
+                player: Player2D {
                     handle: handle as usize,
                 },
                 transform,
@@ -134,8 +139,8 @@ pub fn setup_player_system(
     }
 }
 
-fn setup_world(collider_set: &mut ColliderSetRes) -> ColliderHandle {
-    collider_set.insert(
+fn create_world_collider(collider_set: &mut ColliderSetRes) {
+    let collider_handle = collider_set.insert(
         ColliderBuilder::cuboid(100.0, 1.0)
             .translation(vector!(0.0, -12.0))
             .collision_groups(InteractionGroups::new(
@@ -143,10 +148,16 @@ fn setup_world(collider_set: &mut ColliderSetRes) -> ColliderHandle {
                 PhysicsGroups::Solid as u32 | PhysicsGroups::Player as u32,
             ))
             .build(),
-    )
+    );
+
+    info!(
+        "create_world_collider: collider_handle: {:?}",
+        collider_handle
+    );
 }
 
-fn setup_player_rigid_body(
+fn create_player_rigid_body(
+    handle: PlayerHandle,
     transform: &Transform2D,
     collider_set: &mut ColliderSetRes,
     rigid_body_set: &mut RigidBodySetRes,
@@ -165,6 +176,11 @@ fn setup_player_rigid_body(
         .build();
 
     collider_set.insert_with_parent(rigid_body_collider, rigid_body_handle, rigid_body_set);
+
+    info!(
+        "create_player_rigid_body: player_handle: {}, rigid_body_handle: {:?}",
+        handle, rigid_body_handle
+    );
 
     RigidBodyHandle2D(rigid_body_handle)
 }

@@ -6,12 +6,15 @@ use bevy::ecs::system::ResMut;
 use bevy_ggrs::GGRSApp;
 use ggrs::P2PSession;
 use ggrs::PlayerType;
+use log::LevelFilter;
+use simplelog::*;
 use std::error::Error;
 use std::net::SocketAddr;
 use structopt::StructOpt;
 
 use crate::game::core::input::structs::INPUT_SIZE;
 use crate::game::GameApp;
+use crate::game::GAME_FPS;
 
 #[derive(StructOpt)]
 struct CommandLineArgs {
@@ -23,10 +26,17 @@ struct CommandLineArgs {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cmd = CommandLineArgs::from_args();
-
     let mut p2p_session = P2PSession::new(cmd.players.len() as u32, INPUT_SIZE, cmd.port)?;
-    p2p_session.set_fps(60)?;
+    p2p_session.set_fps(GAME_FPS)?;
     p2p_session.set_sparse_saving(true)?;
+
+    CombinedLogger::init(vec![TermLogger::new(
+        LevelFilter::Info,
+        Config::default(),
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    )])
+    .unwrap();
 
     App::new()
         .insert_game("frogrs")

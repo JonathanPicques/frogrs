@@ -28,7 +28,7 @@
       "program": "${workspaceRoot}/target/debug/frogrs_game.exe",
       "stopAtEntry": false,
       "environment": [
-        { "name": "RUST_BACKTRACE", "value": "0" },
+        { "name": "RUST_BACKTRACE", "value": "1" },
         { "name": "CARGO_MANIFEST_DIR", "value": "${workspaceFolder}" }
       ],
       "preLaunchTask": "rust: cargo build"
@@ -50,7 +50,7 @@
       "program": "${workspaceRoot}/target/debug/frogrs_game.exe",
       "stopAtEntry": false,
       "environment": [
-        { "name": "RUST_BACKTRACE", "value": "0" },
+        { "name": "RUST_BACKTRACE", "value": "1" },
         { "name": "CARGO_MANIFEST_DIR", "value": "${workspaceFolder}" }
       ],
       "preLaunchTask": "rust: cargo build"
@@ -65,7 +65,7 @@
       "program": "${workspaceRoot}/target/debug/frogrs_synctest.exe",
       "stopAtEntry": false,
       "environment": [
-        { "name": "RUST_BACKTRACE", "value": "0" },
+        { "name": "RUST_BACKTRACE", "value": "1" },
         { "name": "CARGO_MANIFEST_DIR", "value": "${workspaceFolder}" }
       ],
       "preLaunchTask": "rust: cargo build"

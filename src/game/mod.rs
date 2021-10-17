@@ -1,8 +1,10 @@
 pub mod core;
+pub mod items;
 pub mod player;
 
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSApp, GGRSPlugin};
+use bevy_prototype_lyon::plugin::ShapePlugin;
 
 use crate::game::core::anim::systems::animate_sprite_system;
 use crate::game::core::frame::structs::FrameCount;
@@ -11,8 +13,11 @@ use crate::game::core::input::systems::input_system;
 use crate::game::core::maths::structs::Transform2D;
 use crate::game::core::maths::systems::sync_transform_system;
 use crate::game::core::physics::structs::*;
-use crate::game::core::physics::systems::physics_system;
-use crate::game::player::{player_system, setup_player_system};
+use crate::game::core::physics::systems::{
+    physics_system_add, physics_system_remove, physics_system_step,
+};
+use crate::game::items::ball::{ball_system, startup_ball_system, Ball2D};
+use crate::game::player::{player_system, startup_player_system, Player2D};
 
 pub const GAME_FPS: u32 = 60;
 
@@ -40,8 +45,9 @@ impl GameApp for App {
                 ..Default::default()
             })
             //
-            .add_plugin(GGRSPlugin)
             .add_plugins(DefaultPlugins)
+            .add_plugin(ShapePlugin)
+            .add_plugin(GGRSPlugin)
             //
             .insert_rollback_resource(FrameCount::default())
             //
@@ -55,21 +61,25 @@ impl GameApp for App {
             .insert_rollback_resource(IslandManagerRes::default())
             .insert_rollback_resource(QueryPipelineRes::default())
             .insert_rollback_resource(IntegrationParametersRes::default())
+            .insert_rollback_resource(RigidBodyRemovedEntitiesRes::default())
             //
+            .register_rollback_type::<Ball2D>()
+            .register_rollback_type::<Player2D>()
             .register_rollback_type::<Transform2D>()
             .register_rollback_type::<RigidBodyHandle2D>()
-            //
             //
             .with_input_system(input_system)
             .with_update_frequency(GAME_FPS)
             //
-            .add_startup_system(setup_player_system)
+            .add_startup_system(startup_ball_system)
+            .add_startup_system(startup_player_system)
             //
             .with_rollback_schedule(
                 Schedule::default()
                     .with_stage(
                         RollbackStages::Game,
                         SystemStage::single_threaded()
+                            .with_system(ball_system)
                             .with_system(frame_system)
                             .with_system(player_system)
                             .with_system(animate_sprite_system),
@@ -77,7 +87,10 @@ impl GameApp for App {
                     .with_stage_after(
                         RollbackStages::Game,
                         RollbackStages::Physics,
-                        SystemStage::single_threaded().with_system(physics_system),
+                        SystemStage::single_threaded()
+                            .with_system(physics_system_add)
+                            .with_system(physics_system_step)
+                            .with_system(physics_system_remove),
                     )
                     .with_stage_after(
                         RollbackStages::Physics,

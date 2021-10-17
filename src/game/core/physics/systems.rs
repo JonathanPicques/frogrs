@@ -11,7 +11,20 @@ pub enum PhysicsGroups {
     Player = 1 << 1,
 }
 
-pub fn physics_system(
+pub fn physics_system_add(
+    rigid_body_set: ResMut<RigidBodySetRes>,
+    mut rigid_body_entities: ResMut<RigidBodyRemovedEntitiesRes>,
+    //
+    mut query: Query<(Entity, &RigidBodyHandle2D), Added<RigidBodyHandle2D>>,
+) {
+    for (entity, rigid_body_handle) in query.iter_mut() {
+        if rigid_body_set.contains(rigid_body_handle.0) {
+            rigid_body_entities.insert(entity, rigid_body_handle.0);
+        }
+    }
+}
+
+pub fn physics_system_step(
     gravity: Res<GravityRes>,
     integration_parameters: Res<IntegrationParametersRes>,
     //
@@ -56,5 +69,28 @@ pub fn physics_system(
             rigid_body_translation.x * SCALE,
             rigid_body_translation.y * SCALE,
         );
+    }
+}
+
+pub fn physics_system_remove(
+    removed_entities: RemovedComponents<RigidBodyHandle2D>,
+    //
+    mut joint_set: ResMut<JointSetRes>,
+    mut collider_set: ResMut<ColliderSetRes>,
+    mut rigid_body_set: ResMut<RigidBodySetRes>,
+    mut island_manager: ResMut<IslandManagerRes>,
+    mut rigid_body_entities: ResMut<RigidBodyRemovedEntitiesRes>,
+) {
+    for removed_entity in removed_entities.iter() {
+        if let Some(&rigid_body_handle) = rigid_body_entities.get(&removed_entity) {
+            rigid_body_set.remove(
+                rigid_body_handle,
+                &mut island_manager,
+                &mut collider_set,
+                &mut joint_set,
+            );
+
+            rigid_body_entities.remove(&removed_entity);
+        }
     }
 }

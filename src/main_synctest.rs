@@ -5,6 +5,8 @@ use bevy::ecs::system::Res;
 use bevy::ecs::system::ResMut;
 use bevy_ggrs::GGRSApp;
 use ggrs::SyncTestSession;
+use log::LevelFilter;
+use simplelog::*;
 use std::error::Error;
 use structopt::StructOpt;
 
@@ -22,6 +24,14 @@ struct CommandLineArgs {
 fn main() -> Result<(), Box<dyn Error>> {
     let cmd = CommandLineArgs::from_args();
     let synctest_session = SyncTestSession::new(cmd.players, INPUT_SIZE, cmd.check_distance)?;
+
+    CombinedLogger::init(vec![TermLogger::new(
+        LevelFilter::Info,
+        Config::default(),
+        TerminalMode::Mixed,
+        ColorChoice::Auto,
+    )])
+    .unwrap();
 
     App::new()
         .insert_game("frogrs_synctest")
