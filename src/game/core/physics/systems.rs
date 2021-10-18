@@ -1,10 +1,10 @@
 use bevy::prelude::*;
+use bevy_prototype_lyon::prelude::*;
 use rapier2d::prelude::*;
 
 use crate::game::core::maths::structs::Transform2D;
+use crate::game::core::physics::range::scale_physics;
 use crate::game::core::physics::structs::*;
-
-const SCALE: f32 = 20.0;
 
 pub enum PhysicsGroups {
     Solid = 1 << 0,
@@ -12,13 +12,76 @@ pub enum PhysicsGroups {
 }
 
 pub fn physics_system_add(
+    collider_set: ResMut<ColliderSetRes>,
     rigid_body_set: ResMut<RigidBodySetRes>,
+    mut commands: Commands,
     mut rigid_body_entities: ResMut<RigidBodyRemovedEntitiesRes>,
     //
     mut query: Query<(Entity, &RigidBodyHandle2D), Added<RigidBodyHandle2D>>,
 ) {
     for (entity, rigid_body_handle) in query.iter_mut() {
         if rigid_body_set.contains(rigid_body_handle.0) {
+            let rigid_body = &rigid_body_set[rigid_body_handle.0];
+
+            let rigid_body_collider_handle = rigid_body.colliders()[0];
+            let rigid_body_collider = &collider_set[rigid_body_collider_handle];
+            let rigid_body_collider_shape = rigid_body_collider.shape();
+
+            match rigid_body_collider_shape.shape_type() {
+                ShapeType::Ball => {
+                    let ball = rigid_body_collider_shape.as_ball().unwrap();
+                    let circle_shape = shapes::Circle {
+                        radius: scale_physics(ball.radius),
+                        ..shapes::Circle::default()
+                    };
+
+                    commands
+                        .entity(entity)
+                        .insert_bundle(GeometryBuilder::build_as(
+                            &circle_shape,
+                            DrawMode::Outlined {
+                                fill_mode: FillMode {
+                                    color: Color::YELLOW,
+                                    options: FillOptions::default(),
+                                },
+                                outline_mode: StrokeMode {
+                                    color: Color::BLACK,
+                                    options: StrokeOptions::default(),
+                                },
+                            },
+                            Transform::default(),
+                        ));
+                }
+                ShapeType::Cuboid => {
+                    let cuboid = rigid_body_collider_shape.as_cuboid().unwrap();
+                    let rectangle_shape = shapes::Rectangle {
+                        extents: Vec2::new(
+                            scale_physics(cuboid.half_extents[0] * 2.0),
+                            scale_physics(cuboid.half_extents[1] * 2.0),
+                        ),
+                        ..shapes::Rectangle::default()
+                    };
+
+                    commands
+                        .entity(entity)
+                        .insert_bundle(GeometryBuilder::build_as(
+                            &rectangle_shape,
+                            DrawMode::Outlined {
+                                fill_mode: FillMode {
+                                    color: Color::YELLOW,
+                                    options: FillOptions::default(),
+                                },
+                                outline_mode: StrokeMode {
+                                    color: Color::BLACK,
+                                    options: StrokeOptions::default(),
+                                },
+                            },
+                            Transform::default(),
+                        ));
+                }
+                _ => (),
+            };
+
             rigid_body_entities.insert(entity, rigid_body_handle.0);
         }
     }
@@ -66,8 +129,8 @@ pub fn physics_system_step(
 
         transform.rotation = rigid_body_rotation.angle();
         transform.position.set(
-            rigid_body_translation.x * SCALE,
-            rigid_body_translation.y * SCALE,
+            scale_physics(rigid_body_translation.x),
+            scale_physics(rigid_body_translation.y),
         );
     }
 }

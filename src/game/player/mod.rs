@@ -8,7 +8,7 @@ use crate::game::{
     core::{
         anim::{structs::SpriteSheetAnimation, utilities::speed_as_secs},
         input::structs::{INPUT_JUMP, INPUT_LEFT, INPUT_RIGHT},
-        maths::structs::Transform2D,
+        maths::structs::{Transform2D, Vector2D},
         physics::{structs::*, systems::PhysicsGroups},
     },
     GAME_FPS,
@@ -70,13 +70,18 @@ pub fn startup_player_system(
     let font_handle = asset_server.load("fonts/Pixellari.ttf");
     let texture_handle = asset_server.load("textures/frog/Stand.png");
 
-    create_world_collider(&mut collider_set);
+    let transform = Transform2D::new_with_position(Vector2D::new(0.0, 0.0));
+    commands
+        .spawn()
+        .insert(create_world_rigid_body(
+            &transform,
+            &mut collider_set,
+            &mut rigid_body_set,
+        ))
+        .insert(transform);
 
     for handle in 0..num_players {
-        let mut transform = Transform2D::default();
-        transform.position.x = handle as f32 * 10.0;
-        transform.position.y = 10.0;
-
+        let transform = Transform2D::new_with_position(Vector2D::new(handle as f32 * 10.0, 10.0));
         let rigid_body_handle = create_player_rigid_body(
             handle as usize,
             &transform,
@@ -139,21 +144,31 @@ pub fn startup_player_system(
     }
 }
 
-fn create_world_collider(collider_set: &mut ColliderSetRes) {
-    let collider_handle = collider_set.insert(
-        ColliderBuilder::cuboid(100.0, 1.0)
-            .translation(vector!(0.0, -12.0))
-            .collision_groups(InteractionGroups::new(
-                PhysicsGroups::Solid as u32,
-                PhysicsGroups::Solid as u32 | PhysicsGroups::Player as u32,
-            ))
-            .build(),
-    );
+fn create_world_rigid_body(
+    transform: &Transform2D,
+    collider_set: &mut ColliderSetRes,
+    rigid_body_set: &mut RigidBodySetRes,
+) -> RigidBodyHandle2D {
+    let rigid_body = RigidBodyBuilder::new_static().build();
+    let rigid_body_handle = rigid_body_set.insert(rigid_body);
+    let rigid_body_collider = ColliderBuilder::cuboid(20.0, 1.0)
+        .rotation(transform.rotation)
+        .translation(vector![transform.position.x, transform.position.y])
+        .restitution(0.0)
+        .collision_groups(InteractionGroups::new(
+            PhysicsGroups::Solid as u32,
+            PhysicsGroups::Solid as u32 | PhysicsGroups::Player as u32,
+        ))
+        .build();
+
+    collider_set.insert_with_parent(rigid_body_collider, rigid_body_handle, rigid_body_set);
 
     info!(
-        "create_world_collider: collider_handle: {:?}",
-        collider_handle
+        "create_world_rigid_body: rigid_body_handle: {:?}",
+        rigid_body_handle
     );
+
+    RigidBodyHandle2D(rigid_body_handle)
 }
 
 fn create_player_rigid_body(
@@ -163,12 +178,13 @@ fn create_player_rigid_body(
     rigid_body_set: &mut RigidBodySetRes,
 ) -> RigidBodyHandle2D {
     let rigid_body = RigidBodyBuilder::new_dynamic()
+        .rotation(transform.rotation)
         .translation(vector![transform.position.x, transform.position.y])
         .lock_rotations()
         .build();
     let rigid_body_handle = rigid_body_set.insert(rigid_body);
     let rigid_body_collider = ColliderBuilder::cuboid(0.5, 1.4)
-        .restitution(0.7)
+        .restitution(0.0)
         .collision_groups(InteractionGroups::new(
             PhysicsGroups::Player as u32,
             PhysicsGroups::Solid as u32 | PhysicsGroups::Player as u32,

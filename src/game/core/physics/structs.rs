@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-
 use bevy::prelude::*;
 use bevy::reflect::impl_reflect_value;
 use derive_more::{Deref, DerefMut};
 use rapier2d::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 // Physics state resources
 

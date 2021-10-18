@@ -9,6 +9,11 @@ pub struct Vector2D {
 #[allow(dead_code)]
 impl Vector2D {
     #[inline]
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+
+    #[inline]
     pub fn set(&mut self, x: f32, y: f32) -> &mut Self {
         self.x = x;
         self.y = y;
@@ -58,4 +63,15 @@ pub struct Transform2D {
     pub scale: Vector2D,
     pub position: Vector2D,
     pub rotation: f32,
+}
+
+#[allow(dead_code)]
+impl Transform2D {
+    #[inline]
+    pub fn new_with_position(position: Vector2D) -> Self {
+        Self {
+            position,
+            ..Default::default()
+        }
+    }
 }
