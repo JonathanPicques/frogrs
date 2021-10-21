@@ -7,6 +7,7 @@ use bevy_ggrs::{GGRSApp, GGRSPlugin};
 use bevy_prototype_lyon::plugin::ShapePlugin;
 
 use crate::game::core::anim::systems::animate_sprite_system;
+use crate::game::core::debug::debug_system;
 use crate::game::core::frame::structs::FrameCount;
 use crate::game::core::frame::systems::frame_system;
 use crate::game::core::input::systems::input_system;
@@ -17,7 +18,8 @@ use crate::game::core::physics::systems::{
     physics_system_add, physics_system_remove, physics_system_step,
 };
 use crate::game::items::ball::{ball_system, startup_ball_system, Ball2D};
-use crate::game::player::{player_system, startup_player_system, Player2D};
+use crate::game::player::structs::Player2D;
+use crate::game::player::systems::{player_system, startup_player_system};
 
 pub const GAME_FPS: u32 = 60;
 
@@ -71,6 +73,7 @@ impl GameApp for App {
             .with_input_system(input_system)
             .with_update_frequency(GAME_FPS)
             //
+            .add_system(debug_system.exclusive_system())
             .add_startup_system(startup_ball_system)
             .add_startup_system(startup_player_system)
             //

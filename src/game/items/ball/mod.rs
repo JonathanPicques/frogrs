@@ -27,11 +27,14 @@ pub fn startup_ball_system(
     mut collider_set: ResMut<ColliderSetRes>,
     mut rigid_body_set: ResMut<RigidBodySetRes>,
 ) {
-    let transform = Transform2D::new_with_position(Vector2D::new(5.0, 3.0));
+    let transform = Transform2D::from_position(Vector2D::new(5.0, 3.0));
 
     commands
         .spawn()
         .insert(Ball2D::default())
+        .insert(Transform::default())
+        .insert(GlobalTransform::default())
+        //
         .insert(create_ball_rigid_body(
             &transform,
             &mut collider_set,

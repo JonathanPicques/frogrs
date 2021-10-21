@@ -23,64 +23,65 @@ pub fn physics_system_add(
         if rigid_body_set.contains(rigid_body_handle.0) {
             let rigid_body = &rigid_body_set[rigid_body_handle.0];
 
-            let rigid_body_collider_handle = rigid_body.colliders()[0];
-            let rigid_body_collider = &collider_set[rigid_body_collider_handle];
-            let rigid_body_collider_shape = rigid_body_collider.shape();
+            for collider_handle in rigid_body.colliders() {
+                let rigid_body_collider = &collider_set[*collider_handle];
+                let rigid_body_collider_shape = rigid_body_collider.shape();
 
-            match rigid_body_collider_shape.shape_type() {
-                ShapeType::Ball => {
-                    let ball = rigid_body_collider_shape.as_ball().unwrap();
-                    let circle_shape = shapes::Circle {
-                        radius: scale_physics(ball.radius),
-                        ..shapes::Circle::default()
-                    };
+                match rigid_body_collider_shape.shape_type() {
+                    ShapeType::Ball => {
+                        let ball = rigid_body_collider_shape.as_ball().unwrap();
+                        let circle_shape = shapes::Circle {
+                            radius: scale_physics(ball.radius),
+                            ..Default::default()
+                        };
 
-                    commands
-                        .entity(entity)
-                        .insert_bundle(GeometryBuilder::build_as(
-                            &circle_shape,
-                            DrawMode::Outlined {
-                                fill_mode: FillMode {
-                                    color: Color::YELLOW,
-                                    options: FillOptions::default(),
+                        commands.entity(entity).with_children(|child_builder| {
+                            child_builder.spawn_bundle(GeometryBuilder::build_as(
+                                &circle_shape,
+                                DrawMode::Outlined {
+                                    fill_mode: FillMode {
+                                        color: Color::YELLOW,
+                                        options: FillOptions::default(),
+                                    },
+                                    outline_mode: StrokeMode {
+                                        color: Color::BLACK,
+                                        options: StrokeOptions::default(),
+                                    },
                                 },
-                                outline_mode: StrokeMode {
-                                    color: Color::BLACK,
-                                    options: StrokeOptions::default(),
-                                },
-                            },
-                            Transform::default(),
-                        ));
-                }
-                ShapeType::Cuboid => {
-                    let cuboid = rigid_body_collider_shape.as_cuboid().unwrap();
-                    let rectangle_shape = shapes::Rectangle {
-                        extents: Vec2::new(
-                            scale_physics(cuboid.half_extents[0] * 2.0),
-                            scale_physics(cuboid.half_extents[1] * 2.0),
-                        ),
-                        ..shapes::Rectangle::default()
-                    };
+                                Transform::default(), // TODO: collider transform
+                            ));
+                        });
+                    }
+                    ShapeType::Cuboid => {
+                        let cuboid = rigid_body_collider_shape.as_cuboid().unwrap();
+                        let rectangle_shape = shapes::Rectangle {
+                            extents: Vec2::new(
+                                scale_physics(cuboid.half_extents[0] * 2.0),
+                                scale_physics(cuboid.half_extents[1] * 2.0),
+                            ),
+                            ..Default::default()
+                        };
 
-                    commands
-                        .entity(entity)
-                        .insert_bundle(GeometryBuilder::build_as(
-                            &rectangle_shape,
-                            DrawMode::Outlined {
-                                fill_mode: FillMode {
-                                    color: Color::YELLOW,
-                                    options: FillOptions::default(),
+                        commands.entity(entity).with_children(|child_builder| {
+                            child_builder.spawn_bundle(GeometryBuilder::build_as(
+                                &rectangle_shape,
+                                DrawMode::Outlined {
+                                    fill_mode: FillMode {
+                                        color: Color::YELLOW,
+                                        options: FillOptions::default(),
+                                    },
+                                    outline_mode: StrokeMode {
+                                        color: Color::BLACK,
+                                        options: StrokeOptions::default(),
+                                    },
                                 },
-                                outline_mode: StrokeMode {
-                                    color: Color::BLACK,
-                                    options: StrokeOptions::default(),
-                                },
-                            },
-                            Transform::default(),
-                        ));
-                }
-                _ => (),
-            };
+                                Transform::default(), // TODO: collider transform
+                            ));
+                        });
+                    }
+                    _ => (),
+                };
+            }
 
             rigid_body_entities.insert(entity, rigid_body_handle.0);
         }

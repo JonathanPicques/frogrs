@@ -68,9 +68,22 @@ pub struct Transform2D {
 #[allow(dead_code)]
 impl Transform2D {
     #[inline]
-    pub fn new_with_position(position: Vector2D) -> Self {
+    pub fn from_scale(scale: Vector2D) -> Self {
+        Self {
+            scale,
+            ..Default::default()
+        }
+    }
+    #[inline]
+    pub fn from_position(position: Vector2D) -> Self {
         Self {
             position,
+            ..Default::default()
+        }
+    }
+    pub fn from_rotation(rotation: f32) -> Self {
+        Self {
+            rotation,
             ..Default::default()
         }
     }
