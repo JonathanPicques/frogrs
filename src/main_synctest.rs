@@ -1,55 +1,44 @@
 mod game;
 
 use bevy::app::App;
-use bevy::ecs::system::Res;
-use bevy::ecs::system::ResMut;
-use bevy_ggrs::GGRSApp;
-use ggrs::SyncTestSession;
-use log::LevelFilter;
-use simplelog::*;
+use bevy_ggrs::Session;
+use ggrs::{PlayerType, SessionBuilder};
 use std::error::Error;
 use structopt::StructOpt;
 
-use crate::game::core::input::structs::INPUT_SIZE;
-use crate::game::GameApp;
+use crate::game::{GameApp, GameConfig};
 
 #[derive(StructOpt)]
 struct CommandLineArgs {
     #[structopt(long)]
-    players: u32,
+    players: usize,
     #[structopt(long)]
-    check_distance: u32,
+    check_distance: usize,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cmd = CommandLineArgs::from_args();
-    let synctest_session = SyncTestSession::new(cmd.players, INPUT_SIZE, cmd.check_distance)?;
+    let num_players = cmd.players;
+    assert!(num_players > 0);
 
-    CombinedLogger::init(vec![TermLogger::new(
-        LevelFilter::Info,
-        Config::default(),
-        TerminalMode::Mixed,
-        ColorChoice::Auto,
-    )])
-    .unwrap();
+    // create a GGRS session
+    let mut session_builder = SessionBuilder::<GameConfig>::new()
+        .with_num_players(num_players)
+        .with_input_delay(2)
+        .with_max_prediction_window(cmd.check_distance);
+
+    // add players
+    for i in 0..cmd.players {
+        session_builder = session_builder.add_player(PlayerType::Local, i)?;
+    }
+
+    // start the GGRS session
+    let session = session_builder.start_synctest_session()?;
 
     App::new()
         .insert_game("frogrs_synctest")
-        .insert_resource(cmd)
-        .with_synctest_session(synctest_session)
-        .add_startup_system(start_synctest_session)
+        .insert_resource(Session::SyncTestSession(session))
         .run();
 
     Ok(())
-}
-
-fn start_synctest_session(
-    mut synctest_session: ResMut<SyncTestSession>,
-    cmd: Res<CommandLineArgs>,
-) {
-    for player_handle in 0..cmd.players {
-        synctest_session
-            .set_frame_delay(2, player_handle as usize)
-            .unwrap();
-    }
 }

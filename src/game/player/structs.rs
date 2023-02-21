@@ -15,7 +15,6 @@ pub struct PlayerBundle {
     pub player: Player2D,
     pub transform: Transform2D,
     pub rigid_body_handle: RigidBodyHandle2D,
-    #[bundle]
     pub sprite_sheet: SpriteSheetBundle,
     pub sprite_sheet_animation: SpriteSheetAnimation,
 }

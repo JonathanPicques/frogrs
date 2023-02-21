@@ -1,10 +1,12 @@
 use bevy::prelude::*;
 use rapier2d::prelude::*;
 
-use crate::game::core::frame::structs::FrameCount;
-use crate::game::core::maths::structs::{Transform2D, Vector2D};
 use crate::game::core::physics::structs::{ColliderSetRes, RigidBodyHandle2D, RigidBodySetRes};
-use crate::game::core::physics::systems::PhysicsGroups;
+use crate::game::core::{frame::structs::FrameCount, physics::systems::PLAYER_PHYSICS_GROUP};
+use crate::game::core::{
+    maths::structs::{Transform2D, Vector2D},
+    physics::systems::SOLID_PHYSICS_GROUP,
+};
 
 #[derive(Default, Reflect, Component)]
 pub struct Ball2D {}
@@ -30,7 +32,7 @@ pub fn startup_ball_system(
     let transform = Transform2D::from_position(Vector2D::new(5.0, 3.0));
 
     commands
-        .spawn()
+        .spawn_empty()
         .insert(Ball2D::default())
         .insert(Transform::default())
         .insert(GlobalTransform::default())
@@ -48,7 +50,7 @@ pub fn create_ball_rigid_body(
     collider_set: &mut ColliderSetRes,
     rigid_body_set: &mut RigidBodySetRes,
 ) -> RigidBodyHandle2D {
-    let rigid_body = RigidBodyBuilder::new_dynamic()
+    let rigid_body = RigidBodyBuilder::dynamic()
         .rotation(transform.rotation)
         .translation(vector![transform.position.x, transform.position.y])
         .build();
@@ -56,8 +58,8 @@ pub fn create_ball_rigid_body(
     let rigid_body_collider = ColliderBuilder::ball(1.0)
         .restitution(0.7)
         .collision_groups(InteractionGroups::new(
-            PhysicsGroups::Player as u32,
-            PhysicsGroups::Solid as u32 | PhysicsGroups::Player as u32,
+            PLAYER_PHYSICS_GROUP,
+            SOLID_PHYSICS_GROUP | PLAYER_PHYSICS_GROUP,
         ))
         .build();
 

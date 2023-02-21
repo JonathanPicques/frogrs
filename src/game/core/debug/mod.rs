@@ -12,7 +12,7 @@ pub fn debug_system(world: &mut World) {
         for entity in all_entities.iter(&world) {
             println!("Entity: {:?}", entity);
             if let Some(parent) = world.entity(entity).get::<Parent>() {
-                println!("\tParent: {:?}", parent.0);
+                println!("\tParent: {:?}", parent.get());
             }
             if let Some(entity_location) = entities.get(entity) {
                 if let Some(archetype) = archetypes.get(entity_location.archetype_id) {

@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use ggrs::PlayerHandle;
 
 use crate::game::core::input::structs::{
-    INPUT_DOWN, INPUT_JUMP, INPUT_LEFT, INPUT_RIGHT, INPUT_UP,
+    BoxInput, INPUT_DOWN, INPUT_JUMP, INPUT_LEFT, INPUT_RIGHT, INPUT_UP,
 };
 
-pub fn input_system(_handle: In<PlayerHandle>, keyboard_input: Res<Input<KeyCode>>) -> Vec<u8> {
+pub fn input_system(_handle: In<PlayerHandle>, keyboard_input: Res<Input<KeyCode>>) -> BoxInput {
     let mut input: u8 = 0;
 
     if keyboard_input.pressed(KeyCode::Up) {
@@ -24,5 +24,5 @@ pub fn input_system(_handle: In<PlayerHandle>, keyboard_input: Res<Input<KeyCode
         input |= INPUT_JUMP;
     }
 
-    vec![input]
+    BoxInput { inp: input }
 }

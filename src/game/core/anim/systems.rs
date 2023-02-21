@@ -12,11 +12,11 @@ pub fn animate_sprite_system(
         ),
         With<Rollback>,
     >,
-    textures: ResMut<Assets<TextureAtlas>>,
+    textures: Res<Assets<TextureAtlas>>,
 ) {
     for (texture_atlas, mut sprite, mut sprite_sheet_animation) in query.iter_mut() {
         if let Some(texture_atlas) = textures.get(texture_atlas) {
-            let nb_frames = texture_atlas.textures.len() as u32;
+            let nb_frames = texture_atlas.textures.len();
 
             if sprite_sheet_animation.dt > sprite_sheet_animation.speed {
                 sprite.index = (sprite.index + 1) % nb_frames;

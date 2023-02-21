@@ -6,14 +6,12 @@ use crate::game::core::maths::structs::Transform2D;
 use crate::game::core::physics::range::scale_physics;
 use crate::game::core::physics::structs::*;
 
-pub enum PhysicsGroups {
-    Solid = 1 << 0,
-    Player = 1 << 1,
-}
+pub const SOLID_PHYSICS_GROUP: rapier2d::geometry::Group = Group::GROUP_1;
+pub const PLAYER_PHYSICS_GROUP: rapier2d::geometry::Group = Group::GROUP_2;
 
 pub fn physics_system_add(
-    collider_set: ResMut<ColliderSetRes>,
-    rigid_body_set: ResMut<RigidBodySetRes>,
+    collider_set: Res<ColliderSetRes>,
+    rigid_body_set: Res<RigidBodySetRes>,
     mut commands: Commands,
     mut rigid_body_entities: ResMut<RigidBodyRemovedEntitiesRes>,
     //
@@ -32,25 +30,28 @@ pub fn physics_system_add(
                         let ball = rigid_body_collider_shape.as_ball().unwrap();
                         let circle_shape = shapes::Circle {
                             radius: scale_physics(ball.radius),
-                            ..Default::default()
+                            ..default()
                         };
 
-                        commands.entity(entity).with_children(|child_builder| {
-                            child_builder.spawn_bundle(GeometryBuilder::build_as(
-                                &circle_shape,
-                                DrawMode::Outlined {
-                                    fill_mode: FillMode {
-                                        color: Color::YELLOW,
-                                        options: FillOptions::default(),
+                        commands
+                            .entity(entity)
+                            .insert(SpatialBundle::default())
+                            .with_children(|child_builder| {
+                                child_builder.spawn(GeometryBuilder::build_as(
+                                    &circle_shape,
+                                    DrawMode::Outlined {
+                                        fill_mode: FillMode {
+                                            color: Color::YELLOW,
+                                            options: FillOptions::default(),
+                                        },
+                                        outline_mode: StrokeMode {
+                                            color: Color::BLACK,
+                                            options: StrokeOptions::default(),
+                                        },
                                     },
-                                    outline_mode: StrokeMode {
-                                        color: Color::BLACK,
-                                        options: StrokeOptions::default(),
-                                    },
-                                },
-                                Transform::default(), // TODO: collider transform
-                            ));
-                        });
+                                    Transform::default(), // TODO: collider transform
+                                ));
+                            });
                     }
                     ShapeType::Cuboid => {
                         let cuboid = rigid_body_collider_shape.as_cuboid().unwrap();
@@ -59,25 +60,28 @@ pub fn physics_system_add(
                                 scale_physics(cuboid.half_extents[0] * 2.0),
                                 scale_physics(cuboid.half_extents[1] * 2.0),
                             ),
-                            ..Default::default()
+                            ..default()
                         };
 
-                        commands.entity(entity).with_children(|child_builder| {
-                            child_builder.spawn_bundle(GeometryBuilder::build_as(
-                                &rectangle_shape,
-                                DrawMode::Outlined {
-                                    fill_mode: FillMode {
-                                        color: Color::YELLOW,
-                                        options: FillOptions::default(),
+                        commands
+                            .entity(entity)
+                            .insert(SpatialBundle::default())
+                            .with_children(|child_builder| {
+                                child_builder.spawn(GeometryBuilder::build_as(
+                                    &rectangle_shape,
+                                    DrawMode::Outlined {
+                                        fill_mode: FillMode {
+                                            color: Color::YELLOW,
+                                            options: FillOptions::default(),
+                                        },
+                                        outline_mode: StrokeMode {
+                                            color: Color::BLACK,
+                                            options: StrokeOptions::default(),
+                                        },
                                     },
-                                    outline_mode: StrokeMode {
-                                        color: Color::BLACK,
-                                        options: StrokeOptions::default(),
-                                    },
-                                },
-                                Transform::default(), // TODO: collider transform
-                            ));
-                        });
+                                    Transform::default(), // TODO: collider transform
+                                ));
+                            });
                     }
                     _ => (),
                 };
@@ -92,7 +96,6 @@ pub fn physics_system_step(
     gravity: Res<GravityRes>,
     integration_parameters: Res<IntegrationParametersRes>,
     //
-    mut joint_set: ResMut<JointSetRes>,
     mut ccd_solver: ResMut<CCDSolverRes>,
     mut broad_phase: ResMut<BroadPhaseRes>,
     mut collider_set: ResMut<ColliderSetRes>,
@@ -100,6 +103,8 @@ pub fn physics_system_step(
     mut rigid_body_set: ResMut<RigidBodySetRes>,
     mut island_manager: ResMut<IslandManagerRes>,
     mut query_pipeline: ResMut<QueryPipelineRes>,
+    mut impulse_joint_set: ResMut<ImpulseJointSetRes>,
+    mut multibody_joint_set: ResMut<MultibodyJointSetRes>,
     //
     mut query: Query<(&mut Transform2D, &RigidBodyHandle2D)>,
 ) {
@@ -115,13 +120,15 @@ pub fn physics_system_step(
         &mut narrow_phase,
         &mut rigid_body_set,
         &mut collider_set,
-        &mut joint_set,
+        &mut impulse_joint_set,
+        &mut multibody_joint_set,
         &mut ccd_solver,
+        Some(&mut query_pipeline),
         &hooks,
         &events,
     );
 
-    query_pipeline.update(&island_manager, &rigid_body_set, &collider_set);
+    query_pipeline.update(&rigid_body_set, &collider_set);
 
     for (mut transform, rigid_body_handle) in query.iter_mut() {
         let rigid_body = &rigid_body_set[rigid_body_handle.0];
@@ -139,10 +146,11 @@ pub fn physics_system_step(
 pub fn physics_system_remove(
     removed_entities: RemovedComponents<RigidBodyHandle2D>,
     //
-    mut joint_set: ResMut<JointSetRes>,
     mut collider_set: ResMut<ColliderSetRes>,
     mut rigid_body_set: ResMut<RigidBodySetRes>,
     mut island_manager: ResMut<IslandManagerRes>,
+    mut impulse_joint_set: ResMut<ImpulseJointSetRes>,
+    mut multibody_joint_set: ResMut<MultibodyJointSetRes>,
     mut rigid_body_entities: ResMut<RigidBodyRemovedEntitiesRes>,
 ) {
     for removed_entity in removed_entities.iter() {
@@ -151,7 +159,9 @@ pub fn physics_system_remove(
                 rigid_body_handle,
                 &mut island_manager,
                 &mut collider_set,
-                &mut joint_set,
+                &mut impulse_joint_set,
+                &mut multibody_joint_set,
+                true,
             );
 
             rigid_body_entities.remove(&removed_entity);

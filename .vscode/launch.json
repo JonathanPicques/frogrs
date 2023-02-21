@@ -39,9 +39,9 @@
         "--port",
         "7001",
         "--players",
-        "local",
+        "127.0.0.1:7000",
         "--players",
-        "127.0.0.1:7000"
+        "local"
       ],
       "name": "(Windows) Launch frogrs_game (other)",
       "type": "cppvsdbg",
@@ -57,8 +57,8 @@
     },
     {
       "cwd": "${workspaceRoot}",
-      "args": ["--players", "2", "--check-distance", "7"],
       "name": "(Windows) Launch frogrs_synctest",
+      "args": ["--players", "2", "--check-distance", "7"],
       "type": "cppvsdbg",
       "request": "launch",
       "console": "internalConsole",

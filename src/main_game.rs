@@ -1,20 +1,13 @@
 mod game;
 
 use bevy::app::App;
-use bevy::ecs::system::Res;
-use bevy::ecs::system::ResMut;
-use bevy_ggrs::GGRSApp;
-use ggrs::P2PSession;
-use ggrs::PlayerType;
-use log::LevelFilter;
-use simplelog::*;
+use bevy_ggrs::Session;
+use ggrs::{PlayerType, SessionBuilder, UdpNonBlockingSocket};
 use std::error::Error;
 use std::net::SocketAddr;
 use structopt::StructOpt;
 
-use crate::game::core::input::structs::INPUT_SIZE;
-use crate::game::GameApp;
-use crate::game::GAME_FPS;
+use crate::game::{GameApp, GameConfig};
 
 #[derive(StructOpt)]
 struct CommandLineArgs {
@@ -26,44 +19,35 @@ struct CommandLineArgs {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cmd = CommandLineArgs::from_args();
-    let mut p2p_session = P2PSession::new(cmd.players.len() as u32, INPUT_SIZE, cmd.port)?;
-    p2p_session.set_fps(GAME_FPS)?;
-    p2p_session.set_sparse_saving(true)?;
+    let num_players = cmd.players.len();
+    assert!(num_players > 0);
 
-    CombinedLogger::init(vec![TermLogger::new(
-        LevelFilter::Info,
-        Config::default(),
-        TerminalMode::Mixed,
-        ColorChoice::Auto,
-    )])
-    .unwrap();
+    // create a GGRS session
+    let mut session_builder = SessionBuilder::<GameConfig>::new()
+        .with_num_players(num_players)
+        .with_input_delay(2)
+        .with_max_prediction_window(12);
 
-    App::new()
-        .insert_game("frogrs")
-        .insert_resource(cmd)
-        .with_p2p_session(p2p_session)
-        .add_startup_system(start_p2p_session)
-        .run();
-
-    Ok(())
-}
-
-fn start_p2p_session(mut p2p_session: ResMut<P2PSession>, cmd: Res<CommandLineArgs>) {
-    for (player_handle, player_address) in cmd.players.iter().enumerate() {
-        if player_address == "local" {
-            p2p_session
-                .add_player(PlayerType::Local, player_handle)
-                .unwrap();
-            p2p_session.set_frame_delay(2, player_handle).unwrap();
+    // add players
+    for (i, player_addr) in cmd.players.iter().enumerate() {
+        if player_addr == "local" {
+            // local player
+            session_builder = session_builder.add_player(PlayerType::Local, i)?;
         } else {
-            let remote_player_address: SocketAddr = player_address
-                .parse()
-                .expect("Invalid remote player address");
-            p2p_session
-                .add_player(PlayerType::Remote(remote_player_address), player_handle)
-                .unwrap();
+            // remote player
+            let remote_addr: SocketAddr = player_addr.parse()?;
+            session_builder = session_builder.add_player(PlayerType::Remote(remote_addr), i)?;
         }
     }
 
-    p2p_session.start_session().unwrap();
+    // start the GGRS session
+    let socket = UdpNonBlockingSocket::bind_to_port(cmd.port)?;
+    let session = session_builder.start_p2p_session(socket)?;
+
+    App::new()
+        .insert_game("frogrs")
+        .insert_resource(Session::P2PSession(session))
+        .run();
+
+    Ok(())
 }

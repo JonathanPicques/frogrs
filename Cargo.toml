@@ -1,21 +1,23 @@
 [package]
-edition = "2018"
+edition = "2021"
 name = "frogrs"
+resolver = "2"
 version = "0.1.0"
 
 [dependencies]
-bevy = {git = "https://github.com/bevyengine/bevy", branch = "main"}
-bevy_ggrs = {git = "https://github.com/JonathanPicques/bevy_ggrs.git", branch = "main"}
-bevy_prototype_lyon = {git = "https://github.com/Nilirad/bevy_prototype_lyon.git", branch = "master"}
-derive_more = "0.99.16"
-fixed = "1.10"
-ggrs = "0.5.1"
-log = "0.4.14"
+bevy = "0.9.1"
+bevy_ggrs = {git = "https://github.com/gschup/bevy_ggrs", branch = "main"}
+bevy_prototype_lyon = "0.7.2"
+bytemuck = "1.13.0"
+derive_more = "0.99.17"
+fixed = "1.23.0"
+ggrs = {git = "https://github.com/gschup/ggrs", features = ["sync-send"]}
+log = "0.4.17"
 rand = "0.8.3"
-rapier2d = {version = "0.11.1", features = ["serde-serialize", "enhanced-determinism"]}
-serde = "1.0.130"
-simplelog = "0.10.2"
-structopt = "0.3"
+rapier2d = {version = "0.17.1", features = ["serde-serialize", "enhanced-determinism"]}
+serde = "1.0.152"
+simplelog = "0.12.0"
+structopt = "0.3.26"
 
 [[bin]]
 name = "frogrs_game"
